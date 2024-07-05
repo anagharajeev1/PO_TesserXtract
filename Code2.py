@@ -70,10 +70,20 @@ app.config['UPLOAD_FOLDER'] = 'input'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 app.config['MAX_FILES'] = 10  # maximum number of files to process at once
 
+
+# Define regex patterns for extraction
+# patterns = {
+#     "PR Number": r"PR Number\s*(\d+)",
+#     "Technical Specifications": r"Technical Specifications\s*:\s*([A-Za-z0-9\s:]+)",
+#     "Vendor Name": r"Vendor Name\s*([A-Za-z]+)",
+#     "Vendor Payment Terms": r"Vendor Payment Terms\s*([\d%a-zA-Z\s,]+)",
+#     "Vendor Delivery Terms": r"Vendor Delivery Terms\s*([\w\s\-:,]+)",
+#     "Cost Estimate": r"Cost Estimate\s*(\d+)",
+#     "Budget Allocated": r"Budget Allocated\s*(\d+)"
+# }
 # Define regex patterns for extraction
 patterns = {
     "PR Number": r"PR Number\s*(\d+)",
-    # "Technical Specifications": r"Technical Specifications\s*:\s*(.+)",  # Adjusted to capture more characters
     "Technical Specifications": r"Technical Specifications\s*([%A-Za-z\s,]+)",
     "Vendor Name": r"Vendor Name\s*([A-Za-z]+)",
     "Vendor Payment Terms": r"Vendor Payment Terms\s*([%A-Za-z\s,]+)",
@@ -108,28 +118,19 @@ def process_file(input_image_path):
     
     # Perform OCR on the processed image
     invoice_text = pytesseract.image_to_string(thresh)
-
-    # print("-------------")
-    # print(invoice_text)
-    # print("**************************")
     
     # Initialize empty dictionary to store field values
     fields = {}
 
     # Iterate through each pattern and extract its corresponding value
-    print("herrreee")
     for key, pattern in patterns.items():
-        print(key,pattern)
         match = re.search(pattern, invoice_text, re.IGNORECASE)  # Ignore case for flexibility
-        print("**************",match)
         if match:
             fields[key] = clean_text(match.group(1))
-            print("##########################",clean_text(match.group(1)))
-    print(fields)
 
     # Return the extracted fields and the file name
     if not fields:
-        return os.path.basename(input_image_path), 'Not an proper Image file'
+        return os.path.basename(input_image_path), 'Not an Invoice Image'
     else:
         return os.path.basename(input_image_path), fields
 
